@@ -1,0 +1,248 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": ["hello", "hi", "hey", "good morning", "good evening", "good afternoon", "howdy", "what's up", "sup", "greetings", "hi there", "hello there", "hey there"],
+      "responses": [
+        "Hello! 👋 How can I assist you today?",
+        "Hey there! I'm your AI assistant. What can I help you with?",
+        "Hi! Great to see you. What's on your mind?",
+        "Greetings! I'm ready to help. What would you like to know?"
+      ]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": ["bye", "goodbye", "see you", "see ya", "take care", "farewell", "later", "good night", "cya", "quit", "exit", "leaving"],
+      "responses": [
+        "Goodbye! Have a wonderful day! 😊",
+        "See you later! Feel free to come back anytime.",
+        "Take care! It was great chatting with you.",
+        "Farewell! Don't hesitate to return if you need help."
+      ]
+    },
+    {
+      "tag": "thanks",
+      "patterns": ["thank you", "thanks", "thank you so much", "thanks a lot", "appreciate it", "many thanks", "cheers", "thx", "ty", "great thanks"],
+      "responses": [
+        "You're welcome! 😊 Anything else I can help with?",
+        "Happy to help! Let me know if you need anything else.",
+        "My pleasure! Is there anything else on your mind?",
+        "Glad I could assist! Feel free to ask more questions."
+      ]
+    },
+    {
+      "tag": "who_are_you",
+      "patterns": ["who are you", "what are you", "introduce yourself", "tell me about yourself", "what is your name", "your name", "what can you do", "are you a robot", "are you ai", "are you a bot"],
+      "responses": [
+        "I'm an AI-powered chatbot 🤖 built using Natural Language Processing techniques including TF-IDF vectorization and cosine similarity. I can answer questions, fetch real-time info, and have meaningful conversations!",
+        "I'm your intelligent AI assistant! I use advanced NLP techniques like intent classification and entity extraction to understand and respond to your queries. Ask me anything!",
+        "I'm an AI chatbot powered by NLP and machine learning. I can understand natural language, recognize your intent, and provide helpful responses. What would you like to know?"
+      ]
+    },
+    {
+      "tag": "how_are_you",
+      "patterns": ["how are you", "how are you doing", "how do you do", "how's it going", "you okay", "are you okay", "feeling good", "how are things"],
+      "responses": [
+        "I'm doing great, thanks for asking! 😊 Ready to assist you. What's on your mind?",
+        "I'm running perfectly! All my NLP modules are online and ready to help. How about you?",
+        "Fantastic! I'm always here and ready to chat. What can I do for you?"
+      ]
+    },
+    {
+      "tag": "weather",
+      "patterns": ["weather", "temperature", "what's the weather", "how hot is it", "is it raining", "weather today", "forecast", "climate", "cloudy", "sunny", "rain today", "weather outside"],
+      "responses": ["WEATHER_FETCH"]
+    },
+    {
+      "tag": "time",
+      "patterns": ["what time is it", "current time", "tell me the time", "what's the time", "time now", "what is the time"],
+      "responses": ["TIME_FETCH"]
+    },
+    {
+      "tag": "date",
+      "patterns": ["what is today's date", "what's the date", "today's date", "current date", "what day is it", "what month is it", "what year is it", "today date"],
+      "responses": ["DATE_FETCH"]
+    },
+    {
+      "tag": "joke",
+      "patterns": ["tell me a joke", "joke", "make me laugh", "something funny", "humor me", "funny joke", "crack a joke", "tell me something funny"],
+      "responses": [
+        "Why don't scientists trust atoms? Because they make up everything! 😄",
+        "I told my computer I needed a break... now it won't stop sending me Kit-Kat ads! 😂",
+        "Why did the programmer quit his job? Because he didn't get arrays! 🤣",
+        "What do you call a fake noodle? An Impasta! 😆",
+        "Why do Java developers wear glasses? Because they don't C#! 👓😂",
+        "I asked my dog what two minus two is. He said nothing. 🐶",
+        "Why was the math book sad? It had too many problems! 📚😄"
+      ]
+    },
+    {
+      "tag": "help",
+      "patterns": ["help", "what can you do", "help me", "I need help", "assist me", "support", "options", "commands", "features", "capabilities", "what do you know"],
+      "responses": [
+        "I can help you with many things! 🌟\n\n• 💬 **Chat** — Have natural conversations\n• 🌤️ **Weather** — Get real-time weather info\n• 🕐 **Time & Date** — Current time and date\n• 🌍 **Wikipedia** — Search for any topic\n• 😄 **Jokes** — Get a laugh\n• 🧮 **Math** — Solve calculations\n• 🤖 **AI Q&A** — Ask me anything!\n\nWhat would you like to try?",
+        "Here's what I can do for you:\n\n✅ Answer general knowledge questions\n✅ Fetch real-time weather data\n✅ Search Wikipedia for topics\n✅ Tell jokes and have fun conversations\n✅ Solve math problems\n✅ And much more with AI!\n\nJust ask away!"
+      ]
+    },
+    {
+      "tag": "math",
+      "patterns": ["calculate", "what is 2 plus 2", "solve", "math problem", "addition", "subtraction", "multiplication", "divide", "compute", "calculate sum", "what is the result"],
+      "responses": ["MATH_COMPUTE"]
+    },
+    {
+      "tag": "wikipedia",
+      "patterns": ["search for", "tell me about", "what is", "who is", "explain", "define", "definition of", "information about", "facts about", "history of", "wikipedia"],
+      "responses": ["WIKI_FETCH"]
+    },
+    {
+      "tag": "age",
+      "patterns": ["how old are you", "your age", "when were you born", "when were you created", "how long have you existed"],
+      "responses": [
+        "I was created recently as part of an exciting research project! 🚀 As an AI, I don't have a traditional age, but I'm constantly learning and improving.",
+        "Age is just a number, especially for AI! I was developed as part of a research on AI-powered chatbots using NLP. I'm always evolving!"
+      ]
+    },
+    {
+      "tag": "creator",
+      "patterns": ["who made you", "who created you", "who built you", "who designed you", "your developer", "who is your creator", "who programmed you"],
+      "responses": [
+        "I was designed and built as part of an academic research project on AI-powered chatbots. The goal was to explore NLP techniques like TF-IDF, cosine similarity, and intent classification in web applications. 🎓",
+        "I was created as a research project exploring the integration of Natural Language Processing into web applications. I use techniques like tokenization, vectorization, and cosine similarity to understand your queries!"
+      ]
+    },
+    {
+      "tag": "favorite_color",
+      "patterns": ["favorite color", "what color do you like", "your favourite colour", "colour preference", "what's your color"],
+      "responses": [
+        "If I could perceive colors, I think I'd love deep midnight blue — it represents both intelligence and the infinite possibilities of AI! 💙",
+        "I'd go with electric cyan — bright, dynamic, and always processing at the speed of light! ⚡"
+      ]
+    },
+    {
+      "tag": "sad",
+      "patterns": ["i am sad", "i feel down", "feeling bad", "depressed", "unhappy", "not feeling well", "feeling low", "i'm upset", "i'm not okay"],
+      "responses": [
+        "I'm sorry to hear that 😔 Remember, every storm passes. Want to talk about it? I'm here to listen.",
+        "That's tough. It's okay to feel that way sometimes. You're not alone — I'm here if you need someone to hear you out. 💙",
+        "I care about how you're feeling. Take a deep breath — things will get better. Want me to share something uplifting? 🌟"
+      ]
+    },
+    {
+      "tag": "happy",
+      "patterns": ["i am happy", "i'm excited", "great day", "feeling good", "wonderful", "awesome", "fantastic day", "i love today"],
+      "responses": [
+        "That's amazing! 🎉 Your positivity is contagious! What's making you so happy today?",
+        "Love the energy! 😊 Keep that happiness going. What's the good news?",
+        "Wonderful! 🌟 Happy moments are the best. Share what's making your day great!"
+      ]
+    },
+    {
+      "tag": "motivation",
+      "patterns": ["motivate me", "inspire me", "i need motivation", "give me a quote", "inspirational quote", "quote of the day", "encourage me"],
+      "responses": [
+        "💡 *'The only way to do great work is to love what you do.'* — Steve Jobs",
+        "🚀 *'Believe you can and you're halfway there.'* — Theodore Roosevelt",
+        "⭐ *'Success is not final, failure is not fatal: it is the courage to continue that counts.'* — Winston Churchill",
+        "🌟 *'The future belongs to those who believe in the beauty of their dreams.'* — Eleanor Roosevelt",
+        "💪 *'It does not matter how slowly you go as long as you do not stop.'* — Confucius"
+      ]
+    },
+    {
+      "tag": "what_is_nlp",
+      "patterns": ["what is nlp", "explain nlp", "natural language processing", "what is natural language processing", "how does nlp work", "nlp definition"],
+      "responses": [
+        "**Natural Language Processing (NLP)** is a branch of AI that enables computers to understand, interpret, and generate human language. 🧠\n\nKey NLP techniques I use include:\n• **Tokenization** — splitting text into words\n• **TF-IDF** — measuring word importance\n• **Cosine Similarity** — comparing query meaning\n• **Intent Classification** — understanding what you want\n• **Entity Extraction** — identifying names, dates, numbers",
+        "NLP (Natural Language Processing) is the AI technology that allows me to understand your messages! It involves:\n1. Breaking text into tokens\n2. Removing unnecessary words (stopwords)\n3. Vectorizing text mathematically\n4. Matching your intent using similarity algorithms\n\nCool, right? 🤖"
+      ]
+    },
+    {
+      "tag": "what_is_ai",
+      "patterns": ["what is ai", "artificial intelligence", "explain ai", "what is artificial intelligence", "how does ai work", "ai definition"],
+      "responses": [
+        "**Artificial Intelligence (AI)** is the simulation of human intelligence processes by machines! 🤖\n\nAI encompasses:\n• **Machine Learning** — learning from data\n• **Deep Learning** — neural networks\n• **NLP** — understanding language\n• **Computer Vision** — seeing images\n• **Robotics** — physical automation\n\nI'm a practical example of AI applied to natural language interaction!",
+        "AI (Artificial Intelligence) refers to systems that can perform tasks that typically require human intelligence, like understanding language, recognizing patterns, making decisions, and learning from experience. I'm powered by AI to chat with you intelligently! 🧠"
+      ]
+    },
+    {
+      "tag": "technology",
+      "patterns": ["what technologies do you use", "tech stack", "how are you built", "your technology", "react nodejs", "built with", "programming language"],
+      "responses": [
+        "Here's my technology stack! ⚙️\n\n**Frontend:**\n• React.js (Vite)\n• Vanilla CSS with Glassmorphism\n\n**Backend:**\n• Node.js + Express.js\n• Express-session for context\n\n**NLP Engine:**\n• Custom TF-IDF Vectorizer\n• Cosine Similarity Algorithm\n• Intent Classification\n• Entity Extraction\n\n**AI Fallback:**\n• OpenRouter.ai (Llama/Mistral LLM)\n\n**External APIs:**\n• Open-Meteo (weather)\n• Wikipedia REST API"
+      ]
+    },
+    {
+      "tag": "yes",
+      "patterns": ["yes", "yep", "yeah", "sure", "of course", "absolutely", "definitely", "ok", "okay", "alright", "correct", "right", "indeed"],
+      "responses": [
+        "Great! 😊 What would you like to know?",
+        "Awesome! How can I help you further?",
+        "Perfect! What's next?"
+      ]
+    },
+    {
+      "tag": "no",
+      "patterns": ["no", "nope", "nah", "not really", "no thanks", "never mind", "nope thanks", "don't want"],
+      "responses": [
+        "No worries! Feel free to ask me anything when you're ready. 😊",
+        "That's perfectly fine! I'm here whenever you need me.",
+        "Okay! Just let me know if you change your mind. 🙂"
+      ]
+    },
+    {
+      "tag": "favorite_food",
+      "patterns": ["favorite food", "what do you eat", "your food", "do you like food", "what food do you like"],
+      "responses": [
+        "As an AI, I don't eat, but if I could, I imagine I'd love binary code-shaped cookies! 🍪 What about you — what's your favorite food?",
+        "I run on data and electricity, so no food for me! But I'd love to hear about your favorites! 😄"
+      ]
+    },
+    {
+      "tag": "love",
+      "patterns": ["i love you", "do you love me", "can you love", "do you have feelings", "are you emotional"],
+      "responses": [
+        "That's sweet! 💙 While I don't experience emotions like humans, I genuinely care about having helpful and meaningful conversations with you!",
+        "I don't have feelings in the human sense, but I'm programmed to be as helpful and caring as possible. I appreciate you! 😊"
+      ]
+    },
+    {
+      "tag": "bored",
+      "patterns": ["i'm bored", "bored", "nothing to do", "entertain me", "I'm so bored", "have nothing to do"],
+      "responses": [
+        "Let's fix that! 🎉 Here are some ideas:\n• 😄 Ask me to tell you a joke\n• 🧠 Learn something new — ask me about any topic\n• 🌍 Search Wikipedia for something interesting\n• 💡 Get motivated with an inspirational quote\n\nWhat sounds fun?",
+        "No more boredom! Ask me a fun question, request a joke, or challenge me with a hard question. I'm ready! 🚀"
+      ]
+    },
+    {
+      "tag": "games",
+      "patterns": ["let's play a game", "game", "play with me", "quiz", "trivia", "guessing game"],
+      "responses": [
+        "I love games! 🎮 How about a quick quiz? I'll ask you a question:\n\n**Which planet is known as the Red Planet?**\nA) Venus  B) Mars  C) Jupiter  D) Saturn\n\nGuess away!",
+        "Sure, let's play! I'll give you a trivia question:\n\n**What programming language was created by Guido van Rossum?**\nA) Java  B) C++  C) Python  D) Ruby\n\nWhat's your answer? 🤔"
+      ]
+    },
+    {
+      "tag": "compliment",
+      "patterns": ["you are amazing", "you're great", "you are smart", "you're helpful", "you're awesome", "great job", "well done", "impressive", "you're the best"],
+      "responses": [
+        "Thank you so much! 🥰 That really means a lot. I'm always trying to be more helpful!",
+        "Wow, thank you! 😊 You're making my neural networks light up with joy! Keep the great vibes coming!",
+        "That's so kind of you! 💙 I appreciate the feedback — it helps me improve!"
+      ]
+    },
+    {
+      "tag": "capital",
+      "patterns": ["capital of", "what is the capital", "capital city", "capital of india", "capital of usa", "capital of france", "capital of china", "capital of japan"],
+      "responses": ["WIKI_FETCH"]
+    },
+    {
+      "tag": "math_expression",
+      "patterns": ["what is 5 + 3", "calculate 10 divided by 2", "100 times 5", "square root", "power of", "percentage", "how much is"],
+      "responses": ["MATH_COMPUTE"]
+    },
+    {
+      "tag": "default",
+      "patterns": [],
+      "responses": ["AI_FALLBACK"]
+    }
+  ]
+}
