@@ -14,11 +14,10 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
-  // Add your Vercel URL here after deploying frontend, e.g.:
-  // 'https://neural-chat.vercel.app'
+  'https://ai-bot-xi-peach.vercel.app',   // Production Vercel frontend
 ];
 
-// Allow any Vercel deployment URL automatically
+// Also allow any additional frontend URL from env var
 if (process.env.FRONTEND_URL) {
   ALLOWED_ORIGINS.push(process.env.FRONTEND_URL);
 }
