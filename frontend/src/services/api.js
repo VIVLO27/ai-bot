@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // In production: set VITE_API_URL in Vercel environment variables
 // In development: falls back to localhost:5000
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/api';
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://ai-bot-tc4d.onrender.com') + '/api';
 
 const api = axios.create({
   baseURL: API_BASE,
