@@ -153,7 +153,7 @@ export default function SidePanel() {
       <div className="sidebar-footer">
         <div className="sidebar-tech-badge">
           <div>Powered by</div>
-          <div><span>Shreya Prajapati</span> · <span></span></div>
+          <div><span></span> · <span></span></div>
           <div><span>OpenRouter AI</span></div>
           <div style={{ marginTop: '4px', fontSize: '10px' }}></div>
         </div>
