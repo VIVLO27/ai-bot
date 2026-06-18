@@ -21,7 +21,7 @@ const ALLOWED_ORIGINS = [
 
 // Also allow any additional frontend URL from env var
 if (process.env.FRONTEND_URL) {
-  ALLOWED_ORIGINS.push(process.env.FRONTEND_URL);
+  ALLOWED_ORIGINS.push(process.env.https://ai-bot-xi-peach.vercel.app);
 }
 
 // ===== Middleware =====
