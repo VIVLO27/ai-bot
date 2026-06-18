@@ -1,87 +1,196 @@
 /**
  * OpenRouter AI Service
- * AI fallback using OpenRouter's free LLM models
+ * Supports multi-model execution, streaming responses, and multimodal (vision) input.
  */
-
-const axios = require('axios');
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// Free models on OpenRouter
-const MODELS = [
-  'meta-llama/llama-3.2-3b-instruct:free',
-  'mistralai/mistral-7b-instruct:free',
-  'google/gemma-2-9b-it:free',
-];
+// Curated model mapping
+const MODEL_MAPPING = {
+  'gemini-flash': 'google/gemini-2.5-flash',
+  'gemini-pro': 'google/gemini-2.5-pro',
+  'deepseek-r1': 'deepseek/deepseek-r1:free',
+  'llama-3.3': 'meta-llama/llama-3.3-70b-instruct:free',
+  'gemma-2': 'google/gemma-2-9b-it:free',
+  'llama-3.2': 'meta-llama/llama-3.2-3b-instruct:free',
+};
 
-const SYSTEM_PROMPT = `You are an intelligent, friendly AI chatbot assistant for a web application. 
-You help users with questions, provide information, and have engaging conversations.
-Keep responses concise (2-4 sentences), helpful, and conversational.
-Use emojis occasionally to make responses friendly.
-You are powered by NLP technologies including TF-IDF vectorization and cosine similarity for intent matching.
-If asked about technical topics, explain them clearly and simply.
-Never refuse to answer basic questions.`;
+const DEFAULT_MODEL = 'google/gemini-2.5-flash';
 
 /**
- * Get AI response from OpenRouter
+ * Dynamically build the system prompt with the current date/time injected.
+ * This ensures the AI always knows today's date and can answer time-sensitive
+ * questions accurately instead of relying on its stale training cutoff.
  */
-async function getAIResponse(userMessage, conversationHistory = [], apiKey) {
+function buildSystemPrompt(customPrompt) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+  const timeStr = now.toLocaleTimeString('en-US', {
+    hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+  });
+
+  const dateContext = `\n\nIMPORTANT — Current date and time: ${dateStr} at ${timeStr}.
+Always use this date when answering questions about today, current events, ages, deadlines, or anything time-sensitive.
+If you don't have information about a very recent event (after your training cutoff), say so honestly.`;
+
+  if (customPrompt) {
+    return customPrompt + dateContext;
+  }
+
+  return `You are an intelligent, friendly AI chatbot assistant for a web application.
+You help users with questions, provide information, and have engaging conversations.
+Keep responses helpful, structured, and conversational. Use Markdown formatting when appropriate.
+You are powered by modern AI models and an NLP routing engine.
+If asked about technical topics, explain them clearly and simply.` + dateContext;
+}
+
+/**
+ * Get AI response from OpenRouter (supports streaming via callback)
+ * @param {string} userMessage - User input
+ * @param {Array} conversationHistory - Past messages context
+ * @param {string} apiKey - OpenRouter API Key
+ * @param {Object} options - Additional options { model, systemPrompt, image, temperature, onChunk }
+ */
+async function getAIResponse(userMessage, conversationHistory = [], apiKey, options = {}) {
+  const selectedModelId = options.model || 'gemini-flash';
+  const model = MODEL_MAPPING[selectedModelId] || selectedModelId || DEFAULT_MODEL;
+  const systemPrompt = buildSystemPrompt(options.systemPrompt);
+  const temperature = options.temperature !== undefined ? parseFloat(options.temperature) : 0.7;
+  const image = options.image || null; // base64 string
+  const onChunk = options.onChunk || null; // function callback for streaming
+
   if (!apiKey) {
-    return getSmartFallback(userMessage);
+    console.warn('[OpenRouter] No API key provided, using local smart fallback.');
+    const fallbackText = getSmartFallback(userMessage);
+    if (onChunk) {
+      // Simulate streaming for fallback
+      const words = fallbackText.split(' ');
+      for (const word of words) {
+        onChunk(word + ' ');
+        await new Promise(r => setTimeout(r, 40));
+      }
+      return '';
+    }
+    return fallbackText;
+  }
+
+  // Format user message content (multimodal if image is attached)
+  let userContent = [];
+  if (image) {
+    userContent.push({
+      type: 'text',
+      text: userMessage,
+    });
+    userContent.push({
+      type: 'image_url',
+      image_url: {
+        url: image, // format: "data:image/jpeg;base64,..."
+      },
+    });
+  } else {
+    userContent = userMessage;
   }
 
   // Build conversation messages
   const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    ...conversationHistory.slice(-6), // Last 6 messages for context
-    { role: 'user', content: userMessage },
+    { role: 'system', content: systemPrompt },
+    ...conversationHistory.slice(-8), // Keep up to 8 messages for context
+    { role: 'user', content: userContent },
   ];
 
-  // Try each model in order
-  for (const model of MODELS) {
-    try {
-      const response = await axios.post(
-        OPENROUTER_API_URL,
-        {
-          model,
-          messages,
-          max_tokens: 256,
-          temperature: 0.7,
-          top_p: 0.9,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'http://localhost:3000',
-            'X-Title': 'AI Chatbot - NLP Research Project',
-          },
-          timeout: 15000,
-        }
-      );
+  try {
+    const isStreaming = typeof onChunk === 'function';
 
-      const content = response.data?.choices?.[0]?.message?.content;
-      if (content && content.trim()) {
-        return content.trim();
-      }
-    } catch (error) {
-      const status = error.response?.status;
-      console.warn(`[OpenRouter] Model ${model} failed (${status}):`, error.message);
+    const response = await fetch(OPENROUTER_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'http://localhost:3000',
+        'X-Title': 'NeuralChat - Advanced AI Platform',
+      },
+      body: JSON.stringify({
+        model,
+        messages,
+        max_tokens: 1500,
+        temperature,
+        top_p: 0.9,
+        stream: isStreaming,
+      }),
+    });
 
-      // If auth error, don't retry other models
-      if (status === 401 || status === 403) {
-        break;
-      }
-      // Continue to next model for other errors
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenRouter HTTP ${response.status}: ${errorText}`);
     }
-  }
 
-  // All models failed - use smart fallback
-  return getSmartFallback(userMessage);
+    if (isStreaming) {
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep partial line in buffer
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          if (trimmed === 'data: [DONE]') continue;
+
+          if (trimmed.startsWith('data: ')) {
+            try {
+              const json = JSON.parse(trimmed.slice(6));
+              const token = json.choices?.[0]?.delta?.content;
+              if (token) {
+                onChunk(token);
+              }
+            } catch (err) {
+              // Ignore partial or malformed chunk parsing errors
+            }
+          }
+        }
+      }
+      return ''; // Streaming returns empty as chunks are processed on-the-fly
+    } else {
+      const json = await response.json();
+      const content = json.choices?.[0]?.message?.content;
+      if (!content || !content.trim()) {
+        throw new Error('Empty response from AI model.');
+      }
+      return content.trim();
+    }
+
+  } catch (error) {
+    console.error(`[OpenRouter API Error] Model: ${model}`, error.message);
+    
+    // Attempt fallback model (Gemini Flash) if custom model fails
+    if (model !== DEFAULT_MODEL && !image) {
+      console.log(`[OpenRouter] Retrying with default model: ${DEFAULT_MODEL}`);
+      return getAIResponse(userMessage, conversationHistory, apiKey, {
+        ...options,
+        model: 'gemini-flash',
+      });
+    }
+
+    // Return smart fallback if all API routes fail
+    const fallbackText = getSmartFallback(userMessage);
+    if (onChunk) {
+      onChunk(fallbackText);
+      return '';
+    }
+    return fallbackText;
+  }
 }
 
 /**
- * Smart rule-based fallback when AI API unavailable
+ * Smart rule-based fallback when AI API is unavailable
  */
 function getSmartFallback(message) {
   const lower = message.toLowerCase();
@@ -108,10 +217,9 @@ function getSmartFallback(message) {
     return '🗺️ Russia is the largest country in the world by area, covering approximately 17.1 million square kilometers — that\'s about 11% of Earth\'s total land area!';
   }
   if (lower.includes('population') && lower.includes('world')) {
-    return '🌍 The world\'s population is approximately 8.1 billion people as of 2024, with the most populous countries being India and China, each with over 1.4 billion people!';
+    return '🌍 The world\'s population is approximately 8.1 billion people as of 2024, with India and China being the most populous countries, each with over 1.4 billion people!';
   }
 
-  // Default intelligent responses
   const fallbacks = [
     `That's an interesting question! 🤔 While I process that through my NLP engine, could you try rephrasing? You can also ask me about weather, Wikipedia topics, math calculations, or general knowledge!`,
     `I'm analyzing your query using cosine similarity and intent classification... 🧠 I might need you to be more specific. Try asking about a specific topic, or type "help" to see what I can do!`,

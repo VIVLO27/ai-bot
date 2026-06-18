@@ -21,8 +21,8 @@ export default function WelcomeScreen() {
       <div>
         <h1 className="welcome-title">NeuralChat AI</h1>
         <p className="welcome-subtitle">
-          An intelligent chatbot powered by <strong>Natural Language Processing</strong>.
-          Ask me anything — I use TF-IDF vectorization and cosine similarity to understand your intent.
+          An intelligent chatbot  <strong></strong>.
+          Ask me anything
         </p>
       </div>
 

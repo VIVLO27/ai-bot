@@ -12,7 +12,9 @@ const IS_PROD = process.env.NODE_ENV === 'production';
 // ===== Allowed Origins =====
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
+  'http://localhost:5175',
   'http://localhost:3000',
+  'http://localhost:5176',
   'http://127.0.0.1:5173',
   'https://ai-bot-xi-peach.vercel.app',   // Production Vercel frontend
 ];
@@ -66,7 +68,7 @@ app.use((req, res, next) => {
 // ===== Routes =====
 
 app.get('/', (req, res) => {
-  res.json({ message: '🤖 NeuralChat AI Backend', status: 'online', developer: 'Vivek Padhiyar' });
+  res.json({ message: '🤖 NeuralChat AI Backend', status: 'online' });
 });
 
 app.get('/api/health', (req, res) => {
@@ -75,9 +77,37 @@ app.get('/api/health', (req, res) => {
     message: '🤖 AI Chatbot Backend is running!',
     version: '1.0.0',
     nlp: 'TF-IDF + Cosine Similarity',
-    developer: 'Vivek Padhiyar',
+
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get('/api/models', async (req, res) => {
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      }
+    });
+    if (!response.ok) {
+      throw new Error(`OpenRouter HTTP ${response.status}`);
+    }
+    const data = await response.json();
+    
+    // Sort models by pricing, prefer free and then by popularity/context length, etc., or just return as is
+    // Let's return just a simplified list
+    const models = data.data.map(model => ({
+      id: model.id,
+      name: model.name,
+      context_length: model.context_length
+    }));
+    
+    // Send top 50 models to not overwhelm the UI, or just send all
+    res.json({ models });
+  } catch (error) {
+    console.error('[Models Route Error]', error);
+    res.status(500).json({ error: 'Failed to fetch models' });
+  }
 });
 
 app.use('/api/chat', chatRouter);
@@ -94,7 +124,7 @@ app.use((err, req, res, next) => {
 // ===== Start Server =====
 app.listen(PORT, () => {
   console.log('\n🚀 ============================');
-  console.log(`🤖 NeuralChat Backend — by Vivek Padhiyar`);
+  console.log(`🤖 NeuralChat Backend`);
   console.log(`🌐 Port: ${PORT} | Mode: ${IS_PROD ? 'Production' : 'Development'}`);
   console.log(`🔑 OpenRouter: ${process.env.OPENROUTER_API_KEY ? '✅ Connected' : '❌ Not set'}`);
   console.log(`📡 NLP Engine: TF-IDF + Cosine Similarity`);

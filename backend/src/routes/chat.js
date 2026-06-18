@@ -1,6 +1,6 @@
 /**
  * Chat Route
- * POST /api/chat — Main NLP processing pipeline
+ * POST /api/chat — Main NLP and AI processing pipeline (supports SSE streaming)
  */
 
 const express = require('express');
@@ -9,143 +9,309 @@ const { classifier } = require('../nlp/intentClassifier');
 const { extractEntities, computeMathFromText } = require('../nlp/entityExtractor');
 const { getWeather, getWikipediaSummary } = require('../services/externalAPI');
 const { getAIResponse } = require('../services/openrouter');
+const { searchWeb } = require('../services/search');
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
+// Get history for a specific session ID
+router.get('/history/:sessionId', (req, res) => {
+  const { sessionId } = req.params;
+  
+  if (!req.session.conversations) {
+    req.session.conversations = {};
+  }
+  
+  const history = req.session.conversations[sessionId] || [];
+  return res.json({ history });
+});
+
+// Delete history for a specific session ID
+router.delete('/history/:sessionId', (req, res) => {
+  const { sessionId } = req.params;
+  
+  if (req.session.conversations) {
+    req.session.conversations[sessionId] = [];
+  }
+  
+  return res.json({ message: `History cleared for session ${sessionId}` });
+});
+
+// Legacy history routing (backwards compatibility)
+router.get('/history', (req, res) => {
+  const history = req.session.history || [];
+  return res.json({ history });
+});
+
+router.delete('/history', (req, res) => {
+  req.session.history = [];
+  return res.json({ message: 'History cleared' });
+});
+
+// POST /api/chat — Chat pipeline
 router.post('/', async (req, res) => {
   const startTime = Date.now();
 
   try {
-    const { message, sessionId } = req.body;
+    const {
+      message,
+      sessionId,
+      model = 'gemini-flash',
+      searchEnabled = false,
+      responseTone = 'detailed',
+      bypassNLP = false,
+      image = null,
+      stream = true
+    } = req.body;
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
     const userMessage = message.trim();
+    const activeSessionId = sessionId || 'default';
 
-    // Initialize session conversation history
-    if (!req.session.history) {
-      req.session.history = [];
+    // Initialize session conversations storage
+    if (!req.session.conversations) {
+      req.session.conversations = {};
+    }
+    if (!req.session.conversations[activeSessionId]) {
+      req.session.conversations[activeSessionId] = [];
     }
 
-    // Add user message to history
-    req.session.history.push({ role: 'user', content: userMessage });
+    const history = req.session.conversations[activeSessionId];
 
-    // Keep only last 10 messages
-    if (req.session.history.length > 10) {
-      req.session.history = req.session.history.slice(-10);
-    }
+    console.log(`[Chat] Query: "${userMessage}" | Session: ${activeSessionId.slice(0, 8)} | Model: ${model} | Search: ${searchEnabled} | Tone: ${responseTone}`);
 
-    console.log(`[Chat] Query: "${userMessage}" | Session: ${sessionId?.slice(0, 8) || 'anon'}`);
+    // Determine if we should bypass local NLP classifier
+    // Note: Multimodal requests (with images) MUST go directly to the vision-capable LLM
+    const shouldBypassNLP = bypassNLP || !!image;
 
-    // === NLP PIPELINE ===
+    let localResponseText = null;
+    let localResponseType = null;
+    let classification = { tag: 'default', confidence: 0 };
+    let entities = {};
 
-    // Step 1: Extract entities
-    const entities = extractEntities(userMessage);
+    if (!shouldBypassNLP) {
+      // Step 1: Extract entities
+      entities = extractEntities(userMessage);
 
-    // Step 2: Classify intent
-    const classification = classifier.classify(userMessage);
-    console.log(`[NLP] Intent: ${classification.tag} | Confidence: ${(classification.confidence * 100).toFixed(1)}%`);
+      // Step 2: Classify intent
+      classification = classifier.classify(userMessage);
+      console.log(`[NLP] Intent: ${classification.tag} | Confidence: ${(classification.confidence * 100).toFixed(1)}%`);
 
-    let responseText = null;
-    let responseType = 'nlp';
-    let metadata = {
-      intent: classification.tag,
-      confidence: parseFloat((classification.confidence * 100).toFixed(1)),
-      entities,
-    };
+      // Step 3: Handle high-confidence local intent matches
+      if (classification.tag !== 'default' && classification.intent && classification.confidence >= 0.7) {
+        const specialCommand = classifier.getSpecialCommand(classification.intent);
 
-    // Step 3: Handle special commands or get response
-    if (classification.tag !== 'default' && classification.intent) {
-      const specialCommand = classifier.getSpecialCommand(classification.intent);
-
-      if (specialCommand && specialCommand !== 'AI_FALLBACK') {
-        // Handle special API-based responses
-        switch (specialCommand) {
-          case 'WEATHER_FETCH': {
-            const location = entities.location || extractLocationFromQuery(userMessage) || 'New Delhi';
-            responseText = await getWeather(location);
-            responseType = 'weather';
-            break;
-          }
-
-          case 'TIME_FETCH': {
-            const now = new Date();
-            responseText = `🕐 **Current Time**\n\n${now.toLocaleTimeString('en-US', { hour12: true, timeZoneName: 'short' })}\n\n📅 *${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}*`;
-            responseType = 'time';
-            break;
-          }
-
-          case 'DATE_FETCH': {
-            const now = new Date();
-            responseText = `📅 **Today's Date**\n\n**${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}**\n\n🕐 Time: ${now.toLocaleTimeString('en-US', { hour12: true })}`;
-            responseType = 'date';
-            break;
-          }
-
-          case 'MATH_COMPUTE': {
-            const result = computeMathFromText(userMessage);
-            if (result) {
-              responseText = `🧮 **Calculation Result**\n\n\`\`\`\n${result}\n\`\`\``;
-              responseType = 'math';
-            } else {
-              responseText = `🧮 I'd love to help with math! Please format your expression clearly, like:\n- "What is 25 + 73?"\n- "Calculate 150 / 6"\n- "Square root of 144"\n- "15% of 200"`;
+        if (specialCommand && specialCommand !== 'AI_FALLBACK') {
+          switch (specialCommand) {
+            case 'WEATHER_FETCH': {
+              const location = entities.location || extractLocationFromQuery(userMessage) || 'New Delhi';
+              localResponseText = await getWeather(location);
+              localResponseType = 'weather';
+              break;
             }
-            break;
-          }
 
-          case 'WIKI_FETCH': {
-            const topic = entities.topic || extractTopicFromQuery(userMessage);
-            if (topic) {
-              const wikiResult = await getWikipediaSummary(topic);
-              responseText = wikiResult || await getAIResponse(userMessage, req.session.history.slice(0, -1), OPENROUTER_API_KEY);
-              responseType = wikiResult ? 'wikipedia' : 'ai';
-            } else {
-              responseText = `🔍 What topic would you like me to look up? For example: "Tell me about quantum computing" or "What is the Eiffel Tower?"`;
+            case 'TIME_FETCH': {
+              const now = new Date();
+              localResponseText = `🕐 **Current Time**\n\n${now.toLocaleTimeString('en-US', { hour12: true, timeZoneName: 'short' })}\n\n📅 *${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}*`;
+              localResponseType = 'time';
+              break;
             }
-            break;
+
+            case 'DATE_FETCH': {
+              const now = new Date();
+              localResponseText = `📅 **Today's Date**\n\n**${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}**\n\n🕐 Time: ${now.toLocaleTimeString('en-US', { hour12: true })}`;
+              localResponseType = 'date';
+              break;
+            }
+
+            case 'MATH_COMPUTE': {
+              const result = computeMathFromText(userMessage);
+              if (result) {
+                localResponseText = `🧮 **Calculation Result**\n\n\`\`\`\n${result}\n\`\`\``;
+                localResponseType = 'math';
+              } else {
+                localResponseText = `🧮 I'd love to help with math! Please format your expression clearly, like:\n- "What is 25 + 73?"\n- "Calculate 150 / 6"\n- "Square root of 144"\n- "15% of 200"`;
+                localResponseType = 'math_help';
+              }
+              break;
+            }
+
+            case 'WIKI_FETCH': {
+              const topic = entities.topic || extractTopicFromQuery(userMessage);
+              if (topic) {
+                const wikiResult = await getWikipediaSummary(topic);
+                if (wikiResult) {
+                  localResponseText = wikiResult;
+                  localResponseType = 'wikipedia';
+                }
+              }
+              break;
+            }
           }
         }
-      } else if (specialCommand === 'AI_FALLBACK') {
-        // Intentionally use AI
-        responseText = await getAIResponse(userMessage, req.session.history.slice(0, -1), OPENROUTER_API_KEY);
-        responseType = 'ai';
-      } else {
-        // Regular intent response
-        responseText = classifier.getResponse(classification.intent);
-        responseType = 'intent';
       }
     }
 
-    // Step 4: Fallback to AI if no response yet
-    if (!responseText) {
-      responseText = await getAIResponse(userMessage, req.session.history.slice(0, -1), OPENROUTER_API_KEY);
-      responseType = 'ai_fallback';
+    // Prepare system prompt based on selected tone
+    let basePrompt = `You are NeuralChat, an advanced AI assistant. You help users with questions, provide detailed information, and have engaging conversations.`;
+    if (responseTone === 'concise') {
+      basePrompt += ` Keep your response very brief (2-3 sentences maximum) and direct. Use emojis occasionally to be friendly.`;
+    } else if (responseTone === 'detailed') {
+      basePrompt += ` Provide highly structured, comprehensive, and clear answers. Use headings, lists, tables, and formatted code blocks (with programming language badges) when appropriate.`;
+    } else if (responseTone === 'creative') {
+      basePrompt += ` Respond with a warm, engaging, and expressive tone. Use rich descriptions, creative insights, and helpful analogies.`;
     }
 
-    // Add bot response to history
-    req.session.history.push({ role: 'assistant', content: responseText });
+    // Step 4: Handle Web Search Grounding if enabled (and local response not found)
+    let searchResults = [];
+    let dynamicSystemPrompt = basePrompt;
 
-    const processingTime = Date.now() - startTime;
-    console.log(`[Chat] Response type: ${responseType} | Time: ${processingTime}ms`);
+    if (!localResponseText && searchEnabled) {
+      console.log(`[Search] Triggering search query for: "${userMessage}"`);
+      searchResults = await searchWeb(userMessage);
+      
+      if (searchResults.length > 0) {
+        const searchContext = searchResults.map((r, i) => 
+          `[${i + 1}] Title: ${r.title}\nURL: ${r.url}\nSnippet: ${r.snippet}`
+        ).join('\n\n');
+        
+        dynamicSystemPrompt = `${basePrompt}
 
-    return res.json({
-      response: responseText,
-      metadata: {
-        ...metadata,
-        responseType,
-        processingTime,
-        timestamp: new Date().toISOString(),
-      },
-    });
+You are provided with real-time web search results matching the user's query. Ground your response strictly in these results. 
+Cite your sources in the text using bracketed numbers, such as [1], [2], etc., corresponding to the search results list. 
+If the search results do not contain enough info, use your general knowledge but clearly state what came from your training vs the search results.
+
+Web Search Results:
+${searchContext}`;
+      }
+    }
+
+    // SSE STREAMING RESPONSE PATH
+    if (stream) {
+      // Set up SSE headers
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.flushHeaders();
+
+      // If resolved locally, write it as a single SSE chunk and terminate
+      if (localResponseText) {
+        res.write(`data: ${JSON.stringify({ token: localResponseText })}\n\n`);
+        
+        const metadata = {
+          intent: classification.tag,
+          confidence: parseFloat((classification.confidence * 100).toFixed(1)),
+          entities,
+          responseType: localResponseType,
+          processingTime: Date.now() - startTime,
+          timestamp: new Date().toISOString()
+        };
+
+        // Add to history
+        history.push({ role: 'user', content: userMessage });
+        history.push({ role: 'assistant', content: localResponseText });
+        // Save back to session
+        if (history.length > 15) req.session.conversations[activeSessionId] = history.slice(-15);
+
+        res.write(`data: ${JSON.stringify({ done: true, metadata, fullText: localResponseText })}\n\n`);
+        res.end();
+        return;
+      }
+
+      // Otherwise, stream from OpenRouter
+      let fullResponseText = '';
+      try {
+        await getAIResponse(userMessage, history, OPENROUTER_API_KEY, {
+          model,
+          systemPrompt: dynamicSystemPrompt,
+          image,
+          onChunk: (chunk) => {
+            fullResponseText += chunk;
+            res.write(`data: ${JSON.stringify({ token: chunk })}\n\n`);
+          }
+        });
+
+        const metadata = {
+          intent: shouldBypassNLP ? 'ai_direct' : classification.tag,
+          confidence: shouldBypassNLP ? 100 : parseFloat((classification.confidence * 100).toFixed(1)),
+          entities,
+          responseType: searchResults.length > 0 ? 'search_grounded' : (image ? 'multimodal' : 'ai_stream'),
+          searchResults: searchResults.length > 0 ? searchResults : undefined,
+          processingTime: Date.now() - startTime,
+          timestamp: new Date().toISOString()
+        };
+
+        // Add to session history
+        history.push({ role: 'user', content: userMessage });
+        history.push({ role: 'assistant', content: fullResponseText });
+        if (history.length > 15) req.session.conversations[activeSessionId] = history.slice(-15);
+
+        res.write(`data: ${JSON.stringify({ done: true, metadata, fullText: fullResponseText })}\n\n`);
+        res.end();
+
+      } catch (err) {
+        console.error('[Streaming Error]', err);
+        res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+        res.end();
+      }
+
+    } else {
+      // STANDARD JSON PATH (FALLBACK / NON-STREAMING)
+      if (localResponseText) {
+        history.push({ role: 'user', content: userMessage });
+        history.push({ role: 'assistant', content: localResponseText });
+        if (history.length > 15) req.session.conversations[activeSessionId] = history.slice(-15);
+
+        return res.json({
+          response: localResponseText,
+          metadata: {
+            intent: classification.tag,
+            confidence: parseFloat((classification.confidence * 100).toFixed(1)),
+            entities,
+            responseType: localResponseType,
+            processingTime: Date.now() - startTime,
+            timestamp: new Date().toISOString()
+          }
+        });
+      }
+
+      const responseText = await getAIResponse(userMessage, history, OPENROUTER_API_KEY, {
+        model,
+        systemPrompt: dynamicSystemPrompt,
+        image
+      });
+
+      history.push({ role: 'user', content: userMessage });
+      history.push({ role: 'assistant', content: responseText });
+      if (history.length > 15) req.session.conversations[activeSessionId] = history.slice(-15);
+
+      return res.json({
+        response: responseText,
+        metadata: {
+          intent: shouldBypassNLP ? 'ai_direct' : classification.tag,
+          confidence: shouldBypassNLP ? 100 : parseFloat((classification.confidence * 100).toFixed(1)),
+          entities,
+          responseType: searchResults.length > 0 ? 'search_grounded' : (image ? 'multimodal' : 'ai_direct'),
+          searchResults: searchResults.length > 0 ? searchResults : undefined,
+          processingTime: Date.now() - startTime,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
 
   } catch (error) {
     console.error('[Chat Route Error]', error);
-    return res.status(500).json({
-      response: `⚠️ I encountered an error processing your request. Please try again!`,
-      metadata: { responseType: 'error' },
-    });
+    if (res.headersSent) {
+      res.write(`data: ${JSON.stringify({ error: 'Internal server error processing response.' })}\n\n`);
+      res.end();
+    } else {
+      return res.status(500).json({
+        response: `⚠️ I encountered an error processing your request. Please try again!`,
+        metadata: { responseType: 'error' },
+      });
+    }
   }
 });
 
@@ -180,16 +346,5 @@ function extractTopicFromQuery(query) {
   }
   return null;
 }
-
-// GET /api/chat/history — return session history
-router.get('/history', (req, res) => {
-  res.json({ history: req.session.history || [] });
-});
-
-// DELETE /api/chat/history — clear session history
-router.delete('/history', (req, res) => {
-  req.session.history = [];
-  res.json({ message: 'History cleared' });
-});
 
 module.exports = router;

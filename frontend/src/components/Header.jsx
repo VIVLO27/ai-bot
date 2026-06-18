@@ -16,8 +16,8 @@ export default function Header() {
           {sidebarOpen ? '✕' : '☰'}
         </button>
         <div>
-          <div className="header-title">NeuralChat <span style={{ fontSize: '11px', fontWeight: 400, color: 'var(--text-muted)', fontFamily: "'JetBrains Mono', monospace" }}>by Vivek Padhiyar</span></div>
-          <div className="header-subtitle">TF-IDF · Cosine Similarity · NLP</div>
+          <div className="header-title">NeuralChat</div>
+          <div className="header-subtitle"></div>
         </div>
       </div>
 

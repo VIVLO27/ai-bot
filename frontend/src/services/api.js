@@ -7,7 +7,7 @@ const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000') + '/a
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
-  timeout: 20000,
+  timeout: 30000, // Increased timeout for deep-reasoning models
 });
 
 /**
@@ -19,18 +19,20 @@ export async function sendMessage(message, sessionId) {
 }
 
 /**
- * Get chat history from session
+ * Get chat history from session (supports session ID)
  */
-export async function getChatHistory() {
-  const response = await api.get('/chat/history');
+export async function getChatHistory(sessionId) {
+  const url = sessionId ? `/chat/history/${sessionId}` : '/chat/history';
+  const response = await api.get(url);
   return response.data;
 }
 
 /**
- * Clear chat history
+ * Clear chat history (supports session ID)
  */
-export async function clearHistory() {
-  const response = await api.delete('/chat/history');
+export async function clearHistory(sessionId) {
+  const url = sessionId ? `/chat/history/${sessionId}` : '/chat/history';
+  const response = await api.delete(url);
   return response.data;
 }
 
@@ -42,4 +44,5 @@ export async function checkHealth() {
   return response.data;
 }
 
+export { API_BASE };
 export default api;
