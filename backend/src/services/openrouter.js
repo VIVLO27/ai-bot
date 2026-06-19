@@ -5,17 +5,19 @@
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-// Curated model mapping
+// Curated model mapping — ALL FREE models (no credits required)
 const MODEL_MAPPING = {
-  'gemini-flash': 'google/gemini-2.5-flash',
-  'gemini-pro': 'google/gemini-2.5-pro',
-  'deepseek-r1': 'deepseek/deepseek-r1:free',
-  'llama-3.3': 'meta-llama/llama-3.3-70b-instruct:free',
-  'gemma-2': 'google/gemma-2-9b-it:free',
-  'llama-3.2': 'meta-llama/llama-3.2-3b-instruct:free',
+  'gemini-flash':  'google/gemini-2.5-flash:free',          // Free tier Gemini 2.5 Flash
+  'gemini-pro':   'google/gemini-2.5-pro:free',             // Free tier Gemini 2.5 Pro
+  'deepseek-r1':  'deepseek/deepseek-r1:free',              // Free DeepSeek R1 reasoning
+  'llama-3.3':    'meta-llama/llama-3.3-70b-instruct:free', // Free Llama 3.3 70B
+  'gemma-2':      'google/gemma-2-9b-it:free',              // Free Gemma 2 9B
+  'llama-3.2':    'meta-llama/llama-3.2-3b-instruct:free',  // Free Llama 3.2 3B
+  'mistral':      'mistralai/mistral-7b-instruct:free',     // Free Mistral 7B
+  'phi-4':        'microsoft/phi-4:free',                   // Free Microsoft Phi-4
 };
 
-const DEFAULT_MODEL = 'google/gemini-2.5-flash';
+const DEFAULT_MODEL = 'google/gemini-2.5-flash:free';
 
 /**
  * Dynamically build the system prompt with the current date/time injected.

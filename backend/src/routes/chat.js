@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
     const {
       message,
       sessionId,
-      model = 'gemini-flash',
+      model = 'google/gemini-2.5-flash:free',
       searchEnabled = false,
       responseTone = 'detailed',
       bypassNLP = false,

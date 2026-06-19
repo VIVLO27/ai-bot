@@ -25,12 +25,14 @@ export default function SidePanel() {
     : (sidebarOpen ? '' : 'collapsed');
 
   const [availableModels, setAvailableModels] = React.useState([
-    { id: 'google/gemini-2.5-flash', name: '🤖 Gemini 2.5 Flash' },
-    { id: 'google/gemini-2.5-pro', name: '🧠 Gemini 2.5 Pro' },
-    { id: 'deepseek/deepseek-r1:free', name: '💭 DeepSeek R1 (Reasoning)' },
-    { id: 'meta-llama/llama-3.3-70b-instruct:free', name: '🦙 Llama 3.3 (70B)' },
-    { id: 'google/gemma-2-9b-it:free', name: '💎 Gemma 2 (9B)' },
-    { id: 'meta-llama/llama-3.2-3b-instruct:free', name: '🍃 Llama 3.2 (3B)' },
+    { id: 'google/gemini-2.5-flash:free',          name: '🤖 Gemini 2.5 Flash (Free)' },
+    { id: 'google/gemini-2.5-pro:free',            name: '🧠 Gemini 2.5 Pro (Free)' },
+    { id: 'deepseek/deepseek-r1:free',             name: '💭 DeepSeek R1 Reasoning (Free)' },
+    { id: 'meta-llama/llama-3.3-70b-instruct:free',name: '🦙 Llama 3.3 70B (Free)' },
+    { id: 'google/gemma-2-9b-it:free',             name: '💎 Gemma 2 9B (Free)' },
+    { id: 'meta-llama/llama-3.2-3b-instruct:free', name: '🍃 Llama 3.2 3B (Free)' },
+    { id: 'mistralai/mistral-7b-instruct:free',    name: '⚡ Mistral 7B (Free)' },
+    { id: 'microsoft/phi-4:free',                  name: '🔬 Microsoft Phi-4 (Free)' },
   ]);
 
   React.useEffect(() => {
@@ -38,14 +40,12 @@ export default function SidePanel() {
       .then(res => res.json())
       .then(data => {
         if (data.models && data.models.length > 0) {
-          // Filter to top popular/free models to keep list manageable, or just show all
-          // Let's show a mix of curated defaults + any others
-          setAvailableModels(data.models.map(m => ({ id: m.id, name: m.name })));
-          
-          // Optionally set active model if it's not set
-          if (!activeModel || activeModel === 'gemini-flash') {
-             // We don't override the context here unless needed, but activeModel might be mapped.
-             // Usually activeModel comes from ChatContext.
+          // Only show FREE models — filter out anything that requires paid credits
+          const freeModels = data.models
+            .filter(m => m.id.endsWith(':free'))
+            .map(m => ({ id: m.id, name: m.name + ' (Free)' }));
+          if (freeModels.length > 0) {
+            setAvailableModels(freeModels);
           }
         }
       })
