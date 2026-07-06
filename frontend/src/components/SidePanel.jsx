@@ -51,9 +51,17 @@ export default function SidePanel() {
         {/* Model Display */}
         <div className="setting-group">
           <label>AI Model</label>
-          <div className="setting-select" style={{ display: 'flex', alignItems: 'center', opacity: 0.8, cursor: 'default', backgroundColor: 'var(--bg-card)', padding: '12px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-subtle)' }}>
-            🤖 Best Free AI (Auto-Selected)
-          </div>
+          <select 
+            value={activeModel} 
+            onChange={(e) => setActiveModel(e.target.value)}
+            className="setting-select"
+            style={{ width: '100%', padding: '12px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-subtle)', backgroundColor: 'var(--bg-card)', color: 'var(--text-main)', cursor: 'pointer' }}
+          >
+            <option value="google/gemini-2.5-flash:free">🤖 Gemini 2.5 Flash</option>
+            <option value="google/gemini-2.5-pro:free">🧠 Gemini 2.5 Pro</option>
+            <option value="meta-llama/llama-3.3-70b-instruct:free">🦙 Llama 3.3 70B</option>
+            <option value="deepseek/deepseek-r1:free">🐳 DeepSeek R1</option>
+          </select>
         </div>
 
         {/* Response Tone buttons */}

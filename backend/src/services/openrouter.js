@@ -18,7 +18,7 @@ const MODEL_MAPPING = {
   'phi-4':        'microsoft/phi-4:free',                   // Free Microsoft Phi-4
 };
 
-const DEFAULT_MODEL = 'openrouter/free';
+const DEFAULT_MODEL = 'google/gemini-2.5-flash:free';
 
 /**
  * Dynamically build the system prompt with the current date/time injected.
@@ -57,7 +57,7 @@ If asked about technical topics, explain them clearly and simply.` + dateContext
  * @param {Object} options - Additional options { model, systemPrompt, image, temperature, onChunk }
  */
 async function getAIResponse(userMessage, conversationHistory = [], apiKey, options = {}) {
-  const selectedModelId = options.model || 'auto-free';
+  const selectedModelId = options.model || 'gemini-flash';
   const model = MODEL_MAPPING[selectedModelId] || selectedModelId || DEFAULT_MODEL;
   const systemPrompt = buildSystemPrompt(options.systemPrompt);
   const temperature = options.temperature !== undefined ? parseFloat(options.temperature) : 0.7;
@@ -178,7 +178,7 @@ async function getAIResponse(userMessage, conversationHistory = [], apiKey, opti
       console.log(`[OpenRouter] Retrying with default model: ${DEFAULT_MODEL}`);
       return getAIResponse(userMessage, conversationHistory, apiKey, {
         ...options,
-        model: 'auto-free',
+        model: 'gemini-flash',
       });
     }
 
