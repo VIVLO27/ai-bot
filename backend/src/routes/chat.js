@@ -16,11 +16,11 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 // Get history for a specific session ID
 router.get('/history/:sessionId', (req, res) => {
   const { sessionId } = req.params;
-  
+
   if (!req.session.conversations) {
     req.session.conversations = {};
   }
-  
+
   const history = req.session.conversations[sessionId] || [];
   return res.json({ history });
 });
@@ -28,11 +28,11 @@ router.get('/history/:sessionId', (req, res) => {
 // Delete history for a specific session ID
 router.delete('/history/:sessionId', (req, res) => {
   const { sessionId } = req.params;
-  
+
   if (req.session.conversations) {
     req.session.conversations[sessionId] = [];
   }
-  
+
   return res.json({ message: `History cleared for session ${sessionId}` });
 });
 
@@ -171,12 +171,12 @@ router.post('/', async (req, res) => {
     if (!localResponseText && searchEnabled) {
       console.log(`[Search] Triggering search query for: "${userMessage}"`);
       searchResults = await searchWeb(userMessage);
-      
+
       if (searchResults.length > 0) {
-        const searchContext = searchResults.map((r, i) => 
+        const searchContext = searchResults.map((r, i) =>
           `[${i + 1}] Title: ${r.title}\nURL: ${r.url}\nSnippet: ${r.snippet}`
         ).join('\n\n');
-        
+
         dynamicSystemPrompt = `${basePrompt}
 
 You are provided with real-time web search results matching the user's query. Ground your response strictly in these results. 
@@ -199,7 +199,7 @@ ${searchContext}`;
       // If resolved locally, write it as a single SSE chunk and terminate
       if (localResponseText) {
         res.write(`data: ${JSON.stringify({ token: localResponseText })}\n\n`);
-        
+
         const metadata = {
           intent: classification.tag,
           confidence: parseFloat((classification.confidence * 100).toFixed(1)),

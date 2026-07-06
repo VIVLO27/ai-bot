@@ -24,33 +24,7 @@ export default function SidePanel() {
     ? (sidebarOpen ? 'open' : 'collapsed')
     : (sidebarOpen ? '' : 'collapsed');
 
-  const [availableModels, setAvailableModels] = React.useState([
-    { id: 'google/gemini-2.5-flash:free',          name: '🤖 Gemini 2.5 Flash (Free)' },
-    { id: 'google/gemini-2.5-pro:free',            name: '🧠 Gemini 2.5 Pro (Free)' },
-    { id: 'deepseek/deepseek-r1:free',             name: '💭 DeepSeek R1 Reasoning (Free)' },
-    { id: 'meta-llama/llama-3.3-70b-instruct:free',name: '🦙 Llama 3.3 70B (Free)' },
-    { id: 'google/gemma-2-9b-it:free',             name: '💎 Gemma 2 9B (Free)' },
-    { id: 'meta-llama/llama-3.2-3b-instruct:free', name: '🍃 Llama 3.2 3B (Free)' },
-    { id: 'mistralai/mistral-7b-instruct:free',    name: '⚡ Mistral 7B (Free)' },
-    { id: 'microsoft/phi-4:free',                  name: '🔬 Microsoft Phi-4 (Free)' },
-  ]);
 
-  React.useEffect(() => {
-    fetch(`${API_BASE}/models`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.models && data.models.length > 0) {
-          // Only show FREE models — filter out anything that requires paid credits
-          const freeModels = data.models
-            .filter(m => m.id.endsWith(':free'))
-            .map(m => ({ id: m.id, name: m.name + ' (Free)' }));
-          if (freeModels.length > 0) {
-            setAvailableModels(freeModels);
-          }
-        }
-      })
-      .catch(err => console.error('Failed to fetch models:', err));
-  }, []);
 
   const formatTime = (iso) => {
     const date = new Date(iso);
@@ -74,21 +48,12 @@ export default function SidePanel() {
       {/* Control Panel Settings */}
       <div className="sidebar-section">Settings & Control</div>
       <div className="sidebar-settings">
-        {/* Model Selector */}
+        {/* Model Display */}
         <div className="setting-group">
-          <label htmlFor="model-select">AI Model</label>
-          <select
-            id="model-select"
-            className="setting-select"
-            value={activeModel}
-            onChange={(e) => setActiveModel(e.target.value)}
-          >
-            {availableModels.map(model => (
-              <option key={model.id} value={model.id}>
-                {model.name}
-              </option>
-            ))}
-          </select>
+          <label>AI Model</label>
+          <div className="setting-select" style={{ display: 'flex', alignItems: 'center', opacity: 0.8, cursor: 'default', backgroundColor: 'var(--bg-card)', padding: '12px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-subtle)' }}>
+            🤖 Gemini 2.5 Flash (Free & Unlimited)
+          </div>
         </div>
 
         {/* Response Tone buttons */}

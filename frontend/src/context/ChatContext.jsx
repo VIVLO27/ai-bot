@@ -21,7 +21,7 @@ const initialState = {
   isOnline: true,
   sidebarOpen: true,
   chatSessions: JSON.parse(localStorage.getItem('chatbot_sessions') || '[]'),
-  
+
   // Advanced Features State
   activeModel: localStorage.getItem('chatbot_active_model') || 'google/gemini-2.5-flash:free',
   searchEnabled: localStorage.getItem('chatbot_search_enabled') === 'true',
@@ -34,7 +34,7 @@ function reducer(state, action) {
   switch (action.type) {
     case 'ADD_MESSAGE':
       return { ...state, messages: [...state.messages, action.payload] };
-    
+
     case 'UPDATE_MESSAGE_CONTENT':
       return {
         ...state,
@@ -47,16 +47,16 @@ function reducer(state, action) {
 
     case 'SET_TYPING':
       return { ...state, isTyping: action.payload };
-    
+
     case 'SET_ONLINE':
       return { ...state, isOnline: action.payload };
-    
+
     case 'TOGGLE_SIDEBAR':
       return { ...state, sidebarOpen: !state.sidebarOpen };
-    
+
     case 'CLEAR_MESSAGES':
       return { ...state, messages: [] };
-    
+
     case 'SET_MESSAGES':
       return { ...state, messages: action.payload };
 
@@ -69,7 +69,7 @@ function reducer(state, action) {
       localStorage.setItem('chatbot_session_id', newId);
       return { ...state, messages: [], sessionId: newId, activeImage: null };
     }
-    
+
     case 'SAVE_SESSION': {
       // Check if session already exists in list
       const exists = state.chatSessions.some(s => s.id === action.payload.id);
@@ -208,7 +208,7 @@ export function ChatProvider({ children }) {
           if (trimmed.startsWith('data: ')) {
             try {
               const parsed = JSON.parse(trimmed.slice(6));
-              
+
               if (parsed.token) {
                 accumulatedText += parsed.token;
                 dispatch({
@@ -216,7 +216,7 @@ export function ChatProvider({ children }) {
                   payload: { id: botMsgId, content: accumulatedText }
                 });
               }
-              
+
               if (parsed.error) {
                 throw new Error(parsed.error);
               }
@@ -266,10 +266,10 @@ export function ChatProvider({ children }) {
     dispatch({ type: 'SET_SESSION_ID', payload: id });
     dispatch({ type: 'SET_TYPING', payload: true });
     dispatch({ type: 'SET_ACTIVE_IMAGE', payload: null });
-    
+
     try {
       const data = await getChatHistory(id);
-      
+
       const formattedMessages = data.history.flatMap((msg, index) => {
         // If it's a user message, check if we want to separate metadata or construct it
         // We recreate simple messages
@@ -281,7 +281,7 @@ export function ChatProvider({ children }) {
         };
         return [formatted];
       });
-      
+
       dispatch({ type: 'SET_MESSAGES', payload: formattedMessages });
       dispatch({ type: 'SET_ONLINE', payload: true });
     } catch (err) {
