@@ -52,7 +52,7 @@ export default function SidePanel() {
         <div className="setting-group">
           <label>AI Model</label>
           <div className="setting-select" style={{ display: 'flex', alignItems: 'center', opacity: 0.8, cursor: 'default', backgroundColor: 'var(--bg-card)', padding: '12px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-subtle)' }}>
-            🤖 Gemini 2.5 Flash (Free & Unlimited)
+            🤖 Best Free AI (Auto-Selected)
           </div>
         </div>
 

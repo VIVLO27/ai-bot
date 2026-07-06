@@ -7,6 +7,7 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Curated model mapping — ALL FREE models (no credits required)
 const MODEL_MAPPING = {
+  'auto-free':    'openrouter/free',                        // Free tier Auto Router
   'gemini-flash':  'google/gemini-2.5-flash:free',          // Free tier Gemini 2.5 Flash
   'gemini-pro':   'google/gemini-2.5-pro:free',             // Free tier Gemini 2.5 Pro
   'deepseek-r1':  'deepseek/deepseek-r1:free',              // Free DeepSeek R1 reasoning
@@ -17,7 +18,7 @@ const MODEL_MAPPING = {
   'phi-4':        'microsoft/phi-4:free',                   // Free Microsoft Phi-4
 };
 
-const DEFAULT_MODEL = 'google/gemini-2.5-flash:free';
+const DEFAULT_MODEL = 'openrouter/free';
 
 /**
  * Dynamically build the system prompt with the current date/time injected.
@@ -56,7 +57,7 @@ If asked about technical topics, explain them clearly and simply.` + dateContext
  * @param {Object} options - Additional options { model, systemPrompt, image, temperature, onChunk }
  */
 async function getAIResponse(userMessage, conversationHistory = [], apiKey, options = {}) {
-  const selectedModelId = options.model || 'gemini-flash';
+  const selectedModelId = options.model || 'auto-free';
   const model = MODEL_MAPPING[selectedModelId] || selectedModelId || DEFAULT_MODEL;
   const systemPrompt = buildSystemPrompt(options.systemPrompt);
   const temperature = options.temperature !== undefined ? parseFloat(options.temperature) : 0.7;
@@ -172,12 +173,12 @@ async function getAIResponse(userMessage, conversationHistory = [], apiKey, opti
   } catch (error) {
     console.error(`[OpenRouter API Error] Model: ${model}`, error.message);
     
-    // Attempt fallback model (Gemini Flash) if custom model fails
+    // Attempt fallback model if custom model fails
     if (model !== DEFAULT_MODEL && !image) {
       console.log(`[OpenRouter] Retrying with default model: ${DEFAULT_MODEL}`);
       return getAIResponse(userMessage, conversationHistory, apiKey, {
         ...options,
-        model: 'gemini-flash',
+        model: 'auto-free',
       });
     }
 
