@@ -8,8 +8,8 @@ const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 // Curated model mapping — ALL FREE models (no credits required)
 const MODEL_MAPPING = {
   'auto-free':    'openrouter/free',                        // Free tier Auto Router
-  'gemini-flash':  'google/gemini-2.5-flash:free',          // Free tier Gemini 2.5 Flash
-  'gemini-pro':   'google/gemini-2.5-pro:free',             // Free tier Gemini 2.5 Pro
+  'gemini-flash':  'google/gemini-2.5-flash',               // Gemini 2.5 Flash
+  'gemini-pro':   'google/gemini-2.5-pro',                  // Gemini 2.5 Pro
   'deepseek-r1':  'deepseek/deepseek-r1:free',              // Free DeepSeek R1 reasoning
   'llama-3.3':    'meta-llama/llama-3.3-70b-instruct:free', // Free Llama 3.3 70B
   'gemma-2':      'google/gemma-2-9b-it:free',              // Free Gemma 2 9B
@@ -18,7 +18,7 @@ const MODEL_MAPPING = {
   'phi-4':        'microsoft/phi-4:free',                   // Free Microsoft Phi-4
 };
 
-const DEFAULT_MODEL = 'google/gemini-2.5-flash:free';
+const DEFAULT_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
 
 /**
  * Dynamically build the system prompt with the current date/time injected.
@@ -174,11 +174,21 @@ async function getAIResponse(userMessage, conversationHistory = [], apiKey, opti
     console.error(`[OpenRouter API Error] Model: ${model}`, error.message);
     
     // Attempt fallback model if custom model fails
-    if (model !== DEFAULT_MODEL && !image) {
-      console.log(`[OpenRouter] Retrying with default model: ${DEFAULT_MODEL}`);
+    const retryCount = options.retryCount || 0;
+    const fallbackList = [
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'google/gemma-4-26b-a4b-it:free',
+      'qwen/qwen3-coder:free',
+      'cognitivecomputations/dolphin-mistral-24b-venice-edition:free'
+    ];
+
+    if (retryCount < fallbackList.length && !image) {
+      const nextModel = fallbackList[retryCount];
+      console.log(`[OpenRouter] Retrying with fallback model: ${nextModel}`);
       return getAIResponse(userMessage, conversationHistory, apiKey, {
         ...options,
-        model: 'gemini-flash',
+        model: nextModel,
+        retryCount: retryCount + 1,
       });
     }
 

@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
     const {
       message,
       sessionId,
-      model = 'google/gemini-2.5-flash:free',
+      model = 'meta-llama/llama-3.3-70b-instruct:free',
       searchEnabled = false,
       responseTone = 'detailed',
       bypassNLP = false,
