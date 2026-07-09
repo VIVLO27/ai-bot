@@ -170,6 +170,7 @@ export function ChatProvider({ children }) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           message: userMessageContent || 'Please analyze this image.',
           sessionId: state.sessionId,
