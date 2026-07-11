@@ -115,6 +115,8 @@ export default function InputBar() {
                 📎
               </button>
               <input
+                id="file-upload-input"
+                name="fileUpload"
                 type="file"
                 ref={fileInputRef}
                 style={{ display: 'none' }}

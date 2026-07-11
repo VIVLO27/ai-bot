@@ -50,8 +50,10 @@ export default function SidePanel() {
       <div className="sidebar-settings">
         {/* Model Display */}
         <div className="setting-group">
-          <label>AI Model</label>
+          <label htmlFor="ai-model-select">AI Model</label>
           <select 
+            id="ai-model-select"
+            name="aiModel"
             value={activeModel} 
             onChange={(e) => setActiveModel(e.target.value)}
             className="setting-select"
@@ -83,8 +85,10 @@ export default function SidePanel() {
 
         {/* Bypass Local NLP Checkbox */}
         <div className="setting-group-toggle">
-          <label className="toggle-label" title="By default, NeuralChat runs a fast local NLP classifier first. Enable this to bypass it and send all messages directly to the LLM.">
+          <label htmlFor="bypass-nlp-checkbox" className="toggle-label" title="By default, NeuralChat runs a fast local NLP classifier first. Enable this to bypass it and send all messages directly to the LLM.">
             <input
+              id="bypass-nlp-checkbox"
+              name="bypassNLP"
               type="checkbox"
               checked={bypassNLP}
               onChange={(e) => setBypassNLP(e.target.checked)}
