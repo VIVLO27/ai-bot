@@ -23,10 +23,10 @@ const initialState = {
   chatSessions: JSON.parse(localStorage.getItem('chatbot_sessions') || '[]'),
 
   // Advanced Features State
-  activeModel: localStorage.getItem('chatbot_active_model') || 'meta-llama/llama-3.3-70b-instruct:free',
+  activeModel: localStorage.getItem('chatbot_active_model') || 'google/gemini-2.5-pro:free',
   searchEnabled: localStorage.getItem('chatbot_search_enabled') === 'true',
   responseTone: localStorage.getItem('chatbot_response_tone') || 'detailed',
-  bypassNLP: localStorage.getItem('chatbot_bypass_nlp') === 'true',
+  bypassNLP: localStorage.getItem('chatbot_bypass_nlp') !== 'false',
   activeImage: null, // base64 string
 };
 
