@@ -1104,3 +1104,53 @@ body {
   filter: brightness(1.05);
 }
 
+/* === Welcome Guide Box === */
+.welcome-guide-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  max-width: 600px;
+  text-align: left;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  margin-top: -10px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.welcome-guide-box h3 {
+  font-size: 16px;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--grad-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.welcome-guide-list {
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.welcome-guide-list li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  position: relative;
+  padding-left: 24px;
+}
+.welcome-guide-list li::before {
+  content: "▹";
+  color: var(--accent-cyan);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+.welcome-guide-list strong {
+  color: var(--text-accent);
+}
